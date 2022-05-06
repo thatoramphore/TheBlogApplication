@@ -15,6 +15,7 @@ namespace TheBlogApplication.Models
         public int Id { get; set; }     //PK
         [Display (Name = "Blog Name")]
         public int BlogId { get; set; } //FK
+        [Display(Name = "Blog Name")]
         public string BlogUserId { get; set; }   //FK
 
         [Required]
