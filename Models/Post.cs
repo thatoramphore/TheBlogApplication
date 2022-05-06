@@ -13,6 +13,7 @@ namespace TheBlogApplication.Models
     public class Post
     {
         public int Id { get; set; }     //PK
+        [Display (Name = "Blog Name")]
         public int BlogId { get; set; } //FK
         public string BlogUserId { get; set; }   //FK
 
@@ -27,11 +28,11 @@ namespace TheBlogApplication.Models
         [Required]
         public string Content { get; set; }
 
-        [DataType(DataType.DateTime)]
+        [DataType(DataType.Date)]
         [Display(Name = "Created Date")]
         public DateTime Created { get; set; }
 
-        [DataType(DataType.DateTime)]
+        [DataType(DataType.Date)]
         [Display(Name = "Updated Date")]
         public DateTime Updated { get; set; }
 
@@ -41,7 +42,7 @@ namespace TheBlogApplication.Models
 
         public string Slug { get; set; }
 
-        [Display(Name = "Image Data")]
+        [Display(Name = "Image")]
         public byte[] ImageData { get; set; }
         [Display(Name = "Image Type")]
         public string ContentType { get; set; }
