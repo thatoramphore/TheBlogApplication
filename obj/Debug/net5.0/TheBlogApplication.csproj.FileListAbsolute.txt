@@ -450,7 +450,6 @@ C:\Users\thato\Documents\code\TheBlogApplication\obj\Debug\net5.0\Razor\Views\Po
 C:\Users\thato\Documents\code\TheBlogApplication\obj\Debug\net5.0\Razor\Views\Posts\Index.cshtml.g.cs
 C:\Users\thato\Documents\code\TheBlogApplication\obj\Debug\net5.0\Razor\Views\Comments\Create.cshtml.g.cs
 C:\Users\thato\Documents\code\TheBlogApplication\obj\Debug\net5.0\Razor\Views\Comments\Delete.cshtml.g.cs
-C:\Users\thato\Documents\code\TheBlogApplication\obj\Debug\net5.0\Razor\Views\Comments\Details.cshtml.g.cs
 C:\Users\thato\Documents\code\TheBlogApplication\obj\Debug\net5.0\Razor\Views\Comments\Edit.cshtml.g.cs
 C:\Users\thato\Documents\code\TheBlogApplication\obj\Debug\net5.0\Razor\Views\Comments\Index.cshtml.g.cs
 C:\Users\thato\Documents\code\TheBlogApplication\obj\Debug\net5.0\Razor\Views\Tags\Create.cshtml.g.cs
