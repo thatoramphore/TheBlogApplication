@@ -13,6 +13,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TheBlogApplication.Data;
 using TheBlogApplication.Models;
+using TheBlogApplication.Services;
 
 namespace TheBlogApplication
 {
@@ -28,23 +29,21 @@ namespace TheBlogApplication
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            /*services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));*/
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(
                     Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddDatabaseDeveloperPageExceptionFilter();
+            //services.AddDatabaseDeveloperPageExceptionFilter();
 
-            /*services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();*/
-            services.AddIdentity<BlogUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+            services.AddIdentity<BlogUser,IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddDefaultUI()
                 .AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+
             services.AddControllersWithViews();
             services.AddRazorPages();
+            services.AddSingleton<DataService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
