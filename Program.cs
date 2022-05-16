@@ -18,13 +18,10 @@ namespace TheBlogApplication
             //CreateHostBuilder(args).Build().Run();
             var host = CreateHostBuilder(args).Build();
 
-            //pull out the registered DataService
-            var dataService = host.Services
-                                  .CreateScope()
-                                  .ServiceProvider
-                                  .GetRequiredService<DataService>();
+            //call registered DataService
+            var dataService = host.Services.CreateScope().ServiceProvider.GetRequiredService<DataService>();
 
-            await dataService.ManagerDataAsync();
+            await dataService.ManageDataAsync();
 
             host.Run();
         }
