@@ -1480,3 +1480,6 @@ C:\Users\thato\Music\TheBlogApplication\obj\Debug\net5.0\refint\TheBlogApplicati
 C:\Users\thato\Music\TheBlogApplication\obj\Debug\net5.0\TheBlogApplication.pdb
 C:\Users\thato\Music\TheBlogApplication\obj\Debug\net5.0\TheBlogApplication.genruntimeconfig.cache
 C:\Users\thato\Music\TheBlogApplication\obj\Debug\net5.0\ref\TheBlogApplication.dll
+C:\Users\thato\Documents\code\TheBlogApplication\bin\Debug\net5.0\MailKit.dll
+C:\Users\thato\Documents\code\TheBlogApplication\bin\Debug\net5.0\MimeKit.dll
+C:\Users\thato\Documents\code\TheBlogApplication\bin\Debug\net5.0\BouncyCastle.Crypto.dll

@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using TheBlogApplication.Data;
 using TheBlogApplication.Models;
 using TheBlogApplication.Services;
+using TheBlogApplication.ViewModels;
 
 namespace TheBlogApplication
 {
@@ -44,6 +45,18 @@ namespace TheBlogApplication
 
             //Register custom DataService class
             services.AddScoped<DataService>();
+
+            //Register a preconfigured instance of the MailSettings class
+            services.Configure<MailSettings>(Configuration.GetSection("MailSettings"));
+
+            //Register the IBlogEmailSender Interface with its concrete class EmailService
+            services.AddScoped<IBlogEmailSender, EmailService>();
+
+            //Register IImageService Interface with its BasicImageService class
+            services.AddScoped<IImageService, BasicImageService>();
+
+            //Register ISlugService Interface with its BasicSlugService
+            services.AddScoped<ISlugService, BasicSlugService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

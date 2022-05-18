@@ -2,21 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TheBlogApplication.Data;
 using TheBlogApplication.Models;
+using TheBlogApplication.Services;
 
 namespace TheBlogApplication.Controllers
 {
     public class BlogsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IImageService _imageService;
+        private readonly UserManager<BlogUser> _userManager;
 
-        public BlogsController(ApplicationDbContext context)
+        public BlogsController(ApplicationDbContext context, IImageService imageservice, UserManager<BlogUser> userManager)
         {
             _context = context;
+            _imageService = imageservice;
+            _userManager = userManager;
         }
 
         // GET: Blogs
@@ -46,6 +53,7 @@ namespace TheBlogApplication.Controllers
         }
 
         // GET: Blogs/Create
+        [Authorize]
         public IActionResult Create()
         {
             return View();
@@ -60,9 +68,13 @@ namespace TheBlogApplication.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(blog);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                blog.Created = DateTime.Now;
+                blog.BlogUserId = _userManager.GetUserId(User);
+                blog.ImageData = await _imageService.EncodeImageAsync(blog.Image);          //
+                blog.ContentType = _imageService.ContentType(blog.Image);
+                _context.Add(blog);                                                     //add the whole 'blog'
+                await _context.SaveChangesAsync();                                      //save to DB
+                return RedirectToAction(nameof(Index));                                 //redirect to index
             }
             ViewData["BlogUserId"] = new SelectList(_context.Users, "Id", "Id", blog.BlogUserId);
             return View(blog);
