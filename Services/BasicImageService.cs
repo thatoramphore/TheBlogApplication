@@ -24,13 +24,13 @@ namespace TheBlogApplication.Services
         {
             if(file is null) return null;
             using var ms = new MemoryStream();
-            await file .CopyToAsync(ms);        //await file to copy itself into ms MemoryStream
+            await file.CopyToAsync(ms);        //await file to copy itself into ms MemoryStream
             return ms.ToArray();
         }
 
         public async Task<byte[]> EncodeImageAsync(string fileName)       //path
         {
-            var file = $"{Directory.GetCurrentDirectory()}/wwwroot/images/{fileName}";
+            var file = $"{Directory.GetCurrentDirectory()}/wwwroot/img/{fileName}";
             return await File.ReadAllBytesAsync(file);
         }
 

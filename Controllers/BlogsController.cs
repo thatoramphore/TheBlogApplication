@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -74,6 +75,7 @@ namespace TheBlogApplication.Controllers
                 blog.ContentType = _imageService.ContentType(blog.Image);
                 _context.Add(blog);                                                     //add the whole 'blog'
                 await _context.SaveChangesAsync();                                      //save to DB
+
                 return RedirectToAction(nameof(Index));                                 //redirect to index
             }
             ViewData["BlogUserId"] = new SelectList(_context.Users, "Id", "Id", blog.BlogUserId);
@@ -102,7 +104,7 @@ namespace TheBlogApplication.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Image")] Blog blog)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description")] Blog blog, IFormFile newImage)
         {
             if (id != blog.Id)
             {
@@ -113,7 +115,16 @@ namespace TheBlogApplication.Controllers
             {
                 try
                 {
-                    _context.Update(blog);
+                    //instance of Blog in the DB
+                    var newBlog = await _context.Blogs.FindAsync(blog.Id);
+
+                    newBlog.Updated = DateTime.Now;             //update Updated property
+
+                    if (newBlog.Name != blog.Name) { newBlog.Name = blog.Name; }    //update blog name
+                    if (newBlog.Description != blog.Description) { newBlog.Description = blog.Description; }    //update blog description
+                    if (newImage is not null) { newBlog.ImageData = await _imageService.EncodeImageAsync(newImage); }
+
+                    
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)

@@ -2,21 +2,30 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TheBlogApplication.Data;
 using TheBlogApplication.Models;
+using TheBlogApplication.Services;
 
 namespace TheBlogApplication.Controllers
 {
     public class PostsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ISlugService _slugService;
+        private readonly IImageService _imageService;
+        private readonly UserManager<BlogUser> _userManager;
 
-        public PostsController(ApplicationDbContext context)
+        public PostsController(ApplicationDbContext context, ISlugService slugservice, IImageService imageService, UserManager<BlogUser> userManager = null)
         {
             _context = context;
+            _slugService = slugservice;
+            _imageService = imageService;
+            _userManager = userManager;
         }
 
         // GET: Posts
@@ -37,6 +46,7 @@ namespace TheBlogApplication.Controllers
             var post = await _context.Posts
                 .Include(p => p.Blog)
                 .Include(p => p.BlogUser)
+                .Include(p => p.Tags)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (post == null)
             {
@@ -59,17 +69,51 @@ namespace TheBlogApplication.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,BlogId,Title,Abstract,Content,ReadyStatus,Image")] Post post)
+        public async Task<IActionResult> Create([Bind("BlogId,Title,Abstract,Content,ReadyStatus,Image")] Post post, List<string> tagValues)
         {
             if (ModelState.IsValid)
             {
                 post.Created = DateTime.Now;       //Created Date
+
+                var authorId = _userManager.GetUserId(User);
+                post.BlogUserId = authorId;
+
+                //Use the _imageService to to store the incoming user-specified image
+                post.ImageData = await _imageService.EncodeImageAsync(post.Image);
+                post.ContentType = _imageService.ContentType(post.Image);
+
+                //create slug and determine if it is unique
+                var slug = _slugService.UrlFriendly(post.Title);
+
+                //if slug is not unique, display error message
+                if (!_slugService.IsUnique(slug))
+                {
+                    ModelState.AddModelError("Title", "The Title you provided cannot be used as it results in a duplicate slug");
+                    ViewData["TagValues"] = string.Join(",", tagValues);
+                    return View(post);
+                }
+                post.Slug = slug;
+
                 _context.Add(post);
+                await _context.SaveChangesAsync();
+
+                //Loop over the incoming list of string
+                foreach (var tag in tagValues)
+                {
+                    _context.Add(new Tag() 
+                    { 
+                        PostId = post.Id,
+                        BlogUserId = authorId,
+                        Text = tag
+                    });
+                }
+
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["BlogId"] = new SelectList(_context.Blogs, "Id", "Description", post.BlogId);
             
+            ViewData["BlogId"] = new SelectList(_context.Blogs, "Id", "Description", post.BlogId);
+
             return View(post);
         }
 
@@ -95,7 +139,7 @@ namespace TheBlogApplication.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,BlogId,Title,Abstract,Content,ReadyStatus,Image")] Post post)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,BlogId,Title,Abstract,Content,ReadyStatus")] Post post, IFormFile newImage)
         {
             if (id != post.Id)
             {
@@ -106,8 +150,21 @@ namespace TheBlogApplication.Controllers
             {
                 try
                 {
-                    post.Updated = DateTime.Now;
-                    _context.Update(post);
+                    var newPost = await _context.Posts.FindAsync(post.Id);
+
+                    newPost.Updated = DateTime.Now;
+                    newPost.Title = post.Title;
+                    newPost.Abstract = post.Abstract;
+                    newPost.Content = post.Content;
+                    newPost.ReadyStatus = post.ReadyStatus;
+
+                    if (newImage is not null)
+                    {
+                        post.ImageData = await _imageService.EncodeImageAsync(newImage);
+                        post.ContentType = _imageService.ContentType(newImage);
+                    }
+
+                   
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)

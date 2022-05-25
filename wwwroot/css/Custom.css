@@ -1,0 +1,8 @@
+button.btn-lg, a.btn-lg {
+    line-height: .5;
+    border-radius: 10px;
+}
+
+Option {
+    font-weight: bolder;
+}
