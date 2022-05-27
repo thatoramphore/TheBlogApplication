@@ -36,9 +36,9 @@ namespace TheBlogApplication.Controllers
         }
 
         // GET: Posts/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(string slug)
         {
-            if (id == null)
+            if (string.IsNullOrEmpty(slug))
             {
                 return NotFound();
             }
@@ -47,7 +47,7 @@ namespace TheBlogApplication.Controllers
                 .Include(p => p.Blog)
                 .Include(p => p.BlogUser)
                 .Include(p => p.Tags)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Slug == slug);
             if (post == null)
             {
                 return NotFound();
@@ -85,13 +85,35 @@ namespace TheBlogApplication.Controllers
                 //create slug and determine if it is unique
                 var slug = _slugService.UrlFriendly(post.Title);
 
-                //if slug is not unique, display error message
-                if (!_slugService.IsUnique(slug))
+                //Create to store whether an error has occured
+                var validationError = false;
+
+                //Detect incoming empty Slugs
+                if (string.IsNullOrEmpty(slug))
                 {
+                    validationError = true;
+                    ModelState.AddModelError("", "The Title you provided cannot be used as it results in an empty slug");
+                }
+                //Detect incoming duplicate Slugs
+                else if (!_slugService.IsUnique(slug))
+                {
+                    validationError = true;
                     ModelState.AddModelError("Title", "The Title you provided cannot be used as it results in a duplicate slug");
+                    
+                }
+                else if (slug.Contains("test"))
+                {
+                    validationError = true;
+                    ModelState.AddModelError("", "Oops! Are you conducting test again?");
+                    ModelState.AddModelError("Title", "The Title cannot contain the word test");
+                }
+
+                if (validationError)
+                {
                     ViewData["TagValues"] = string.Join(",", tagValues);
                     return View(post);
                 }
+
                 post.Slug = slug;
 
                 _context.Add(post);
@@ -118,19 +140,22 @@ namespace TheBlogApplication.Controllers
         }
 
         // GET: Posts/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(string slug)
         {
-            if (id == null)
+            if (string.IsNullOrEmpty(slug))
             {
                 return NotFound();
             }
 
-            var post = await _context.Posts.FindAsync(id);
+            var post = await _context.Posts.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Slug == slug);
+
             if (post == null)
             {
                 return NotFound();
             }
             ViewData["BlogId"] = new SelectList(_context.Blogs, "Id", "Name", post.BlogId);
+            ViewData["TagValues"] = string.Join(",", post.Tags.Select(t => t.Text));
+
             return View(post);
         }
 
@@ -139,9 +164,9 @@ namespace TheBlogApplication.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,BlogId,Title,Abstract,Content,ReadyStatus")] Post post, IFormFile newImage)
+        public async Task<IActionResult> Edit(string slug, [Bind("Id,BlogId,Title,Abstract,Content,ReadyStatus")] Post post, IFormFile newImage, List<string> tagValues)
         {
-            if (id != post.Id)
+            if (slug != post.Slug)
             {
                 return NotFound();
             }
@@ -150,7 +175,7 @@ namespace TheBlogApplication.Controllers
             {
                 try
                 {
-                    var newPost = await _context.Posts.FindAsync(post.Id);
+                    var newPost = await _context.Posts.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Slug == post.Slug);
 
                     newPost.Updated = DateTime.Now;
                     newPost.Title = post.Title;
@@ -158,18 +183,47 @@ namespace TheBlogApplication.Controllers
                     newPost.Content = post.Content;
                     newPost.ReadyStatus = post.ReadyStatus;
 
+                    //handle slug when post is edited
+                    var newSlug = _slugService.UrlFriendly(post.Title);
+                    if (newSlug != newPost.Slug)
+                    {
+                        if (_slugService.IsUnique(newSlug))
+                        {
+                            newPost.Title = post.Title;
+                            newPost.Slug = newSlug;
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("Title", "The Title you provided cannot be used as it results in a duplicate slug");
+                            ViewData["TagValues"] = string.Join(",", post.Tags.Select(t => t.Text));
+                            return View(post);      //return the user back to the view that they edited
+                        }
+                    }
+
                     if (newImage is not null)
                     {
                         post.ImageData = await _imageService.EncodeImageAsync(newImage);
                         post.ContentType = _imageService.ContentType(newImage);
                     }
 
+                    //Remove all Tags previously associated with this Post
+                    _context.Tags.RemoveRange(newPost.Tags);
+
+                    //Add in the new Tags from the Edit form
+                    foreach(var tagText in tagValues)
+                    {
+                            _context.Add(new Tag() {
+                            PostId = post.Id,
+                            BlogUserId = newPost.BlogUserId,
+                            Text = tagText
+                        });
+                    }
                    
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!PostExists(post.Id))
+                    if (!PostExists(post.Slug))
                     {
                         return NotFound();
                     }
@@ -186,9 +240,9 @@ namespace TheBlogApplication.Controllers
         }
 
         // GET: Posts/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(string slug)
         {
-            if (id == null)
+            if (string.IsNullOrEmpty(slug))
             {
                 return NotFound();
             }
@@ -196,7 +250,7 @@ namespace TheBlogApplication.Controllers
             var post = await _context.Posts
                 .Include(p => p.Blog)
                 .Include(p => p.BlogUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Slug == slug);
             if (post == null)
             {
                 return NotFound();
@@ -208,17 +262,22 @@ namespace TheBlogApplication.Controllers
         // POST: Posts/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(string slug)
         {
-            var post = await _context.Posts.FindAsync(id);
+            if (string.IsNullOrEmpty(slug))
+            {
+                return NotFound();
+            }
+
+            var post = await _context.Posts.FindAsync(slug);
             _context.Posts.Remove(post);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool PostExists(int id)
+        private bool PostExists(string slug)
         {
-            return _context.Posts.Any(e => e.Id == id);
+            return _context.Posts.Any(e => e.Slug == slug);
         }
     }
 }
