@@ -1483,3 +1483,10 @@ C:\Users\thato\Music\TheBlogApplication\obj\Debug\net5.0\ref\TheBlogApplication.
 C:\Users\thato\Documents\code\TheBlogApplication\bin\Debug\net5.0\MailKit.dll
 C:\Users\thato\Documents\code\TheBlogApplication\bin\Debug\net5.0\MimeKit.dll
 C:\Users\thato\Documents\code\TheBlogApplication\bin\Debug\net5.0\BouncyCastle.Crypto.dll
+C:\Users\thato\Documents\code\TheBlogApplication\obj\Debug\net5.0\Razor\Views\Posts\BlogPostIndex.cshtml.g.cs
+C:\Users\thato\Documents\code\TheBlogApplication\bin\Debug\net5.0\Microsoft.AspNetCore.JsonPatch.dll
+C:\Users\thato\Documents\code\TheBlogApplication\bin\Debug\net5.0\Newtonsoft.Json.Bson.dll
+C:\Users\thato\Documents\code\TheBlogApplication\bin\Debug\net5.0\X.PagedList.dll
+C:\Users\thato\Documents\code\TheBlogApplication\bin\Debug\net5.0\X.PagedList.Mvc.Core.dll
+C:\Users\thato\Documents\code\TheBlogApplication\bin\Debug\net5.0\X.PagedList.Web.Common.dll
+C:\Users\thato\Documents\code\TheBlogApplication\obj\Debug\net5.0\Razor\Views\Posts\SearchIndex.cshtml.g.cs

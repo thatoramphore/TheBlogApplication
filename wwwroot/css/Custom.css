@@ -1,6 +1,7 @@
-button.btn-lg, a.btn-lg {
+button.btn-lg, a.btn-lg, butoon.btn-sm {
     line-height: .5;
     border-radius: 10px;
+
 }
 
 Option {
