@@ -12,6 +12,7 @@ using TheBlogApplication.Models;
 using TheBlogApplication.Services;
 using TheBlogApplication.Enums;
 using X.PagedList;
+using TheBlogApplication.ViewModels;
 
 namespace TheBlogApplication.Controllers
 {
@@ -72,26 +73,33 @@ namespace TheBlogApplication.Controllers
         }
 
         // GET: Posts/Details/5
+        
         public async Task<IActionResult> Details(string slug)
         {
-            if (string.IsNullOrEmpty(slug))
-            {
-                return NotFound();
-            }
+            ViewData["Title"] = "Post Details Page";
+            if (string.IsNullOrEmpty(slug)) { return NotFound(); }
 
             var post = await _context.Posts
-                .Include(p => p.Blog)
                 .Include(p => p.BlogUser)   //post's author
                 .Include(p => p.Tags)
                 .Include(p => p.Comments)
                 .ThenInclude(c => c.BlogUser)   //comment's author
+                .Include(p => p.Comments)
+                //.Include(c => c.Moderator)
                 .FirstOrDefaultAsync(m => m.Slug == slug);
-            if (post == null)
-            {
-                return NotFound();
-            }
+            if (post == null) { return NotFound(); }
 
-            return View(post);
+            var dataVM = new PostDetailViewModel()
+            {
+                Post = post,
+                Tags = _context.Tags.Select(t => t.Text.ToLower()).Distinct().ToList()
+            };
+
+            ViewData["HeaderImage"] = _imageService.DecodeImage(post.ImageData, post.ContentType);
+            ViewData["MainText"] = post.Title;
+            ViewData["SubText"] = post.Abstract;
+
+            return View(dataVM);
         }
 
         // GET: Posts/Create
